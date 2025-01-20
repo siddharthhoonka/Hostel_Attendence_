@@ -60,16 +60,30 @@ The **Hostel Attendance System** utilizes a combination of **OpenCV** for face d
 
 1. **Access the Registration Page**:  
    Open your browser and navigate to:  
-   `http://localhost:5000/register` (This will be locally hosted as you run the code)
+      
+      THE LOCAL HOST SERVER CREATED WHEN YOU RUN THE CODE(Register.py) EX-(http://localhost:5000/register)
+      
+      
+![Screenshot (260)](https://hackmd.io/_uploads/Hk3sLwoD1e.png)
+
 
 2. **Enter Student Details**:  
    Provide the necessary information such as name and roll number.
 
+
 3. **Capture Student Image**:  
    Use the webcam to take a clear photo of the student’s face.
 
+![Screenshot (261)](https://hackmd.io/_uploads/By6nvwoP1e.png)
+
+
+
+
 4. **Submit the Form**:  
    After submission, verify that the student is successfully added to the database.
+
+![Screenshot (262)](https://hackmd.io/_uploads/SyG-uPoDJg.png)
+
 
 ---
 
@@ -77,7 +91,13 @@ The **Hostel Attendance System** utilizes a combination of **OpenCV** for face d
 
 1. **Navigate to Attendance Page**:  
    Open:  
-      Attendence file and run it
+        
+        Attendence file and run it (Attendence.py)
+        
+        
+![Screenshot (264)](https://hackmd.io/_uploads/HJXvuvjDJg.png)
+
+
 
 2. **Activate the Webcam**:  
    The system will initiate face scanning.

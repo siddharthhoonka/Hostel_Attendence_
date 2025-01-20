@@ -60,7 +60,7 @@ The **Hostel Attendance System** utilizes a combination of **OpenCV** for face d
 
 1. **Access the Registration Page**:  
    Open your browser and navigate to:  
-   `http://localhost:5000/register` *(replace with your actual URL)*
+   `http://localhost:5000/register` (This will be locally hosted as you run the code)
 
 2. **Enter Student Details**:  
    Provide the necessary information such as name and roll number.
@@ -77,7 +77,7 @@ The **Hostel Attendance System** utilizes a combination of **OpenCV** for face d
 
 1. **Navigate to Attendance Page**:  
    Open:  
-   `http://localhost:5000/attendance` *(replace with your actual URL)*
+      Attendence file and run it
 
 2. **Activate the Webcam**:  
    The system will initiate face scanning.
@@ -92,7 +92,7 @@ The **Hostel Attendance System** utilizes a combination of **OpenCV** for face d
 
 1. **Go to the Records Page**:  
    Open:  
-   `http://localhost:5000/view-attendance` *(replace with your actual URL)*
+      The CSV file or you can check the excel file
 
 2. **Filter and Review Logs**:  
    Utilize filters by date or student name to review detailed attendance logs.

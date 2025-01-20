@@ -19,7 +19,7 @@ The **Hostel Attendance System** utilizes a combination of **OpenCV** for face d
 
 ---
 
-## 🛠️ Features
+## 🔧 Features
 
 ### Core Features
 
@@ -59,45 +59,37 @@ The **Hostel Attendance System** utilizes a combination of **OpenCV** for face d
 ### Register a Student
 
 1. **Access the Registration Page**:  
-   Open your browser and navigate to:  
-      
-      THE LOCAL HOST SERVER CREATED WHEN YOU RUN THE CODE(Register.py) EX-(http://localhost:5000/register)
-      
-      
-![Screenshot (260)](https://hackmd.io/_uploads/Hk3sLwoD1e.png)
+   Open your browser and navigate to:
 
+   `http://localhost:5000/register`
+
+   ![Registration Page](https://example.com/registration-page.png)
 
 2. **Enter Student Details**:  
    Provide the necessary information such as name and roll number.
 
+   ![Student Details](https://example.com/student-details.png)
 
 3. **Capture Student Image**:  
    Use the webcam to take a clear photo of the student’s face.
 
-![Screenshot (261)](https://hackmd.io/_uploads/By6nvwoP1e.png)
-
-
-
+   ![Capture Image](https://example.com/capture-image.png)
 
 4. **Submit the Form**:  
    After submission, verify that the student is successfully added to the database.
 
-![Screenshot (262)](https://hackmd.io/_uploads/SyG-uPoDJg.png)
-
+   ![Submission Confirmation](https://example.com/submission-confirmation.png)
 
 ---
 
 ### Mark Attendance
 
 1. **Navigate to Attendance Page**:  
-   Open:  
-        
-        Attendence file and run it (Attendence.py)
-        
-        
-![Screenshot (264)](https://hackmd.io/_uploads/HJXvuvjDJg.png)
+   Open:
 
+   `Attendence.py`
 
+   ![Attendance Page](https://example.com/attendance-page.png)
 
 2. **Activate the Webcam**:  
    The system will initiate face scanning.
@@ -111,8 +103,9 @@ The **Hostel Attendance System** utilizes a combination of **OpenCV** for face d
 ### View Attendance Records
 
 1. **Go to the Records Page**:  
-   Open:  
-      The CSV file or you can check the excel file
+   Open:
+
+   The CSV file or you can check the Excel file.
 
 2. **Filter and Review Logs**:  
    Utilize filters by date or student name to review detailed attendance logs.
@@ -135,7 +128,7 @@ The **Hostel Attendance System** utilizes a combination of **OpenCV** for face d
 
 ---
 
-## 📥 Installation and Setup
+## 📝 Installation and Setup
 
 ### Prerequisites
 
@@ -154,3 +147,39 @@ The **Hostel Attendance System** utilizes a combination of **OpenCV** for face d
    ```bash
    git clone https://github.com/yourusername/hostel-attendance-system.git
    cd hostel-attendance-system
+   ```
+
+2. **Install Required Dependencies:**
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+3. **Run the Registration Module:**
+   ```bash
+   python Register.py
+   ```
+
+4. **Run the Attendance Module:**
+   ```bash
+   python Attendance.py
+   ```
+
+5. **View Logs:**
+   Open the CSV or Excel file to review attendance records.
+
+---
+
+## 📊 Future Enhancements
+
+- **Cloud Integration:**  
+  Store attendance data on cloud databases for remote accessibility.
+
+- **Mobile App Support:**  
+  Develop a mobile app for seamless attendance monitoring.
+
+- **Multi-Camera Setup:**  
+  Expand system capabilities to support multiple entry points.
+
+---
+
+This Hostel Attendance System is designed to save time, ensure accuracy, and provide a seamless attendance management experience!

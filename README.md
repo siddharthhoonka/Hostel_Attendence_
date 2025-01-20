@@ -63,8 +63,7 @@ The **Hostel Attendance System** utilizes a combination of **OpenCV** for face d
 
    `http://localhost:5000/register`
 
-  <img src="![Screenshot (260)](https://github.com/user-attachments/assets/6b518a88-20d2-4fdc-a78f-dd3d861279e5)
-" alt="Registration Page">
+   ![Attendance System Interface](images/attendance-system.png) 
 
 
 2. **Enter Student Details**:  

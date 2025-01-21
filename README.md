@@ -63,22 +63,21 @@ The **Hostel Attendance System** utilizes a combination of **OpenCV** for face d
 
    `http://localhost:5000/register`
 
-
-
 2. **Enter Student Details**:  
    Provide the necessary information such as name and roll number.
 
-   ![Student Details](https://example.com/student-details.png)
-
 3. **Capture Student Image**:  
    Use the webcam to take a clear photo of the student’s face.
+   
+    <img src = "Thumbnails/Screenshot%20(268).png">
 
-   ![Capture Image](https://example.com/capture-image.png)
+4. **Capture Student Image**:  
+   Use the webcam to take a clear photo of the student’s face.
 
-4. **Submit the Form**:  
+5. **Submit the Form**:  
    After submission, verify that the student is successfully added to the database.
 
-   ![Submission Confirmation](https://example.com/submission-confirmation.png)
+   <img src = "Thumbnails/Screenshot%20(269).png">
 
 ---
 
@@ -88,17 +87,18 @@ The **Hostel Attendance System** utilizes a combination of **OpenCV** for face d
    Open:
 
    `Attendence.py`
+   
+    <img src = "Thumbnails/Screenshot%20(270).png">
 
-   ![Attendance Page](https://example.com/attendance-page.png)
-
-2. **Activate the Webcam**:  
+3. **Activate the Webcam**:  
    The system will initiate face scanning.
 
-3. **Attend the Session**:  
+4. **Attend the Session**:  
    - The system recognizes a registered student and marks them “Present” with a timestamp.
    - If a match is not found, you will be prompted to try again.
+     
+    <img src = "Thumbnails/Screenshot%20(273).png">
 
----
 
 ### View Attendance Records
 

@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attendance System - Face Recognition</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #121212;
+            color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 600px;
+            background: #1e1e1e;
+            padding: 40px;
+            border-radius: 16px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+            text-align: center;
+            border: 2px solid #444;
+        }
+
+        h1 {
+            color: #ff4081;
+            font-size: 2.4em;
+            margin-bottom: 20px;
+            font-weight: 700;
+        }
+
+        label {
+            display: block;
+            font-size: 1.1em;
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #e0e0e0;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px 15px;
+            margin: 10px 0;
+            background-color: #333;
+            border: 1px solid #555;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 1.1em;
+            transition: background-color 0.3s ease;
+        }
+
+        input:focus {
+            border-color: #ff4081;
+            background-color: #444;
+            outline: none;
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            background-color: #ff4081;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.2em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #ff3385;
+            transform: translateY(-2px);
+        }
+
+        button:active {
+            background-color: #e6367e;
+            transform: translateY(1px);
+        }
+
+        .alert {
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 8px;
+            font-size: 1.1em;
+            text-align: center;
+        }
+
+        .alert.success {
+            background-color: #388e3c;
+            color: #fff;
+        }
+
+        .alert.error {
+            background-color: #d32f2f;
+            color: #fff;
+        }
+
+        /* Camera Preview Styles */
+        #videoElement {
+            width: 100%;
+            height: 300px;
+            background-color: #000;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+
+        #captureBtn {
+            margin-top: 20px;
+            padding: 12px 20px;
+            background-color: #ff4081;
+            border: none;
+            color: white;
+            border-radius: 8px;
+            font-size: 1.2em;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.3s ease;
+        }
+
+        #captureBtn:hover {
+            background-color: #ff3385;
+        }
+
+        #captureBtn:active {
+            background-color: #e6367e;
+        }
+
+        /* For Error Handling */
+        .error-text {
+            color: #f44336;
+            font-size: 1.2em;
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .captured-image {
+            margin-top: 20px;
+            border-radius: 10px;
+            border: 4px solid #ff4081;
+            box-shadow: 0 0 10px rgba(255, 64, 129, 0.5);
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Attendance System - Face Recognition</h1>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <ul>
+                    {% for category, message in messages %}
+                        <li class="alert {{ category }}">{{ message }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        {% endwith %}
+
+        <form action="/register" method="POST" enctype="multipart/form-data" id="registerForm">
+            <label for="id">ID</label>
+            <input type="text" id="id" name="id" required placeholder="Enter your ID">
+            <br>
+            <label for="name">Name</label>
+            <input type="text" id="name" name="name" required placeholder="Enter your Name">
+            <br>
+
+            <div>
+                <video id="videoElement" autoplay></video>
+            </div>
+
+            <br>
+
+            <button type="submit" id="submitBtn" disabled>Register</button>
+            <button type="button" id="captureBtn">Capture Image</button>
+        </form>
+
+        <!-- Error message display -->
+        <div id="errorMsg" class="error-text" style="display:none;"></div>
+
+        <!-- Display captured image -->
+        <div id="capturedImageContainer" class="captured-image" style="display:none;">
+            <img id="capturedImage" width="200" alt="Captured Image" />
+        </div>
+    </div>
+
+    <script>
+        const video = document.getElementById('videoElement');
+        const captureBtn = document.getElementById('captureBtn');
+        const submitBtn = document.getElementById('submitBtn');
+        const errorMsg = document.getElementById('errorMsg');
+        const capturedImageContainer = document.getElementById('capturedImageContainer');
+        const capturedImage = document.getElementById('capturedImage');
+        let imageData = null;
+
+        // Initialize camera
+        async function startCamera() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                video.srcObject = stream;
+            } catch (error) {
+                errorMsg.style.display = 'block';
+                errorMsg.textContent = 'Unable to access the camera.';
+            }
+        }
+
+        // Capture image from video feed
+        captureBtn.addEventListener('click', () => {
+            if (imageData) {
+                return;  // Prevent capturing again
+            }
+
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            imageData = canvas.toDataURL('image/jpeg');
+            submitBtn.disabled = false; // Enable register button once image is captured
+
+            // Display the captured image
+            capturedImage.src = imageData;
+            capturedImageContainer.style.display = 'block';  // Show captured image preview
+        });
+
+        // Prevent form submission until image is captured
+        const form = document.getElementById('registerForm');
+        form.addEventListener('submit', function (e) {
+            if (!imageData) {
+                e.preventDefault();  // Stop form submission if no image is captured
+                errorMsg.style.display = 'block';
+                errorMsg.textContent = 'Please capture an image before submitting the form.';
+            }
+        });
+
+        // Start the camera when the page loads
+        startCamera();
+    </script>
+</body>
+</html>

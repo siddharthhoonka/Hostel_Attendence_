@@ -11,6 +11,28 @@ import pandas as pd
 import datetime
 import time
 
+############################################# YOLO INITIALIZATION ################################################
+# Set the file paths for YOLOv3-Face configuration and weights.
+YOLO_CFG = "yolov3-face.cfg"
+YOLO_WEIGHTS = "yolov3-wider_16000.weights"
+
+def check_yolo_files():
+    """Check if YOLO model files exist. If missing, prompt an error and exit."""
+    if not os.path.isfile(YOLO_CFG) or not os.path.isfile(YOLO_WEIGHTS):
+        mess._show(
+            title='File Missing',
+            message=(f"YOLO model files are missing.\nPlease ensure that:\n"
+                     f"{YOLO_CFG}\n{YOLO_WEIGHTS}\nare present in the working directory.")
+        )
+        window.destroy()
+
+# Load YOLO network
+check_yolo_files()  # Ensure the YOLO files exist
+net_yolo = cv2.dnn.readNetFromDarknet(YOLO_CFG, YOLO_WEIGHTS)
+# Get the output layer names
+ln = net_yolo.getLayerNames()
+ln = [ln[i - 1] for i in net_yolo.getUnconnectedOutLayers()]
+
 ############################################# FUNCTIONS ################################################
 
 def assure_path_exists(path):
@@ -33,7 +55,7 @@ def contact():
 
 ###################################################################################
 def check_haarcascadefile():
-    """Check if Haar Cascade file exists. If missing, prompt error."""
+    """Check if Haar Cascade file exists. (May still be used for pre-processing.)"""
     if not os.path.isfile("haarcascade_frontalface_default.xml"):
         mess._show(title='File Missing', message='Required Haar Cascade file is missing.\nPlease contact support.')
         window.destroy()
@@ -83,13 +105,9 @@ def change_pass():
     master.resizable(False, False)
     master.title("Change Password")
     master.configure(background="#2d2d2d")
-
-    # Labels
     tk.Label(master, text='Enter Old Password', bg='#2d2d2d', fg='white', font=('Segoe UI', 12, 'bold')).place(x=30, y=20)
     tk.Label(master, text='Enter New Password', bg='#2d2d2d', fg='white', font=('Segoe UI', 12, 'bold')).place(x=30, y=70)
     tk.Label(master, text='Confirm New Password', bg='#2d2d2d', fg='white', font=('Segoe UI', 12, 'bold')).place(x=30, y=120)
-
-    # Entries
     global old, new, nnew
     old = tk.Entry(master, width=25, relief='flat', font=('Segoe UI', 12), show='*')
     old.place(x=200, y=20)
@@ -97,8 +115,6 @@ def change_pass():
     new.place(x=200, y=70)
     nnew = tk.Entry(master, width=25, relief='flat', font=('Segoe UI', 12), show='*')
     nnew.place(x=200, y=120)
-
-    # Buttons
     tk.Button(master, text="Save", command=save_pass, fg="white", bg="#00b894", width=8,
               activebackground="#55efc4", font=('Segoe UI', 10, 'bold')).place(x=80, y=160)
     tk.Button(master, text="Cancel", command=master.destroy, fg="white", bg="#e74c3c", width=8,
@@ -122,7 +138,6 @@ def psw():
                 tf.write(new_pas)
             mess._show(title='Password Registered', message='New password registered successfully!')
         return
-
     password = tsd.askstring('Password', 'Enter Password:', show='*')
     if password == key:
         TrainImages()
@@ -143,13 +158,49 @@ def clear2():
     message1.configure(text="1)Take Images  >>>  2)Save Profile")
 
 #######################################################################################
+# YOLO Face Detection Function
+def detect_faces_yolo(frame, net, conf_threshold=0.5, nms_threshold=0.3):
+    """
+    Detect faces using YOLO.
+    :param frame: Input image (BGR)
+    :param net: YOLO network (from Darknet)
+    :param conf_threshold: Confidence threshold to filter detections.
+    :param nms_threshold: Non-max suppression threshold.
+    :return: List of bounding boxes in [x, y, x+w, y+h] format.
+    """
+    (H, W) = frame.shape[:2]
+    blob = cv2.dnn.blobFromImage(frame, 1/255.0, (416, 416), swapRB=True, crop=False)
+    net.setInput(blob)
+    layerOutputs = net.forward(ln)
+
+    boxes = []
+    confidences = []
+    for output in layerOutputs:
+        for detection in output:
+            scores = detection[5:]
+            confidence = detection[4]
+            if confidence > conf_threshold:
+                box = detection[0:4] * np.array([W, H, W, H])
+                (centerX, centerY, width, height) = box.astype("int")
+                x = int(centerX - (width / 2))
+                y = int(centerY - (height / 2))
+                boxes.append([x, y, int(width), int(height)])
+                confidences.append(float(confidence))
+    idxs = cv2.dnn.NMSBoxes(boxes, confidences, conf_threshold, nms_threshold)
+    final_boxes = []
+    if len(idxs) > 0:
+        for i in idxs.flatten():
+            x, y, w, h = boxes[i]
+            final_boxes.append([x, y, x+w, y+h])
+    return final_boxes
+
+#######################################################################################
 def TakeImages():
-    """Capture and save images for a new registration."""
-    check_haarcascadefile()
+    """Capture and save images for a new registration using improved YOLO detection."""
+    check_yolo_files()  # Ensure YOLO files exist
     columns = ['SERIAL NO.', '', 'ID', '', 'NAME']
     assure_path_exists("StudentDetails/")
     assure_path_exists("TrainingImage/")
-
     serial = 0
     csv_path = "StudentDetails\\StudentDetails.csv"
     if os.path.isfile(csv_path):
@@ -169,29 +220,25 @@ def TakeImages():
 
     if (name.isalpha()) or (' ' in name):
         cam = cv2.VideoCapture(0)
-        detector = cv2.CascadeClassifier("haarcascade_frontalface_default.xml")
         sampleNum = 0
-
         while True:
             ret, img = cam.read()
             if not ret:
                 break
+            boxes = detect_faces_yolo(img, net_yolo, conf_threshold=0.5, nms_threshold=0.3)
             gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-            faces = detector.detectMultiScale(gray, 1.3, 5)
-            for (x, y, w, h) in faces:
-                cv2.rectangle(img, (x, y), (x + w, y + h), (30, 144, 255), 2)
+            for (x1, y1, x2, y2) in boxes:
+                cv2.rectangle(img, (x1, y1), (x2, y2), (30,144,255), 2)
                 sampleNum += 1
-                cv2.imwrite(f"TrainingImage\\{name}.{serial}.{Id}.{sampleNum}.jpg", gray[y:y + h, x:x + w])
+                cv2.imwrite(f"TrainingImage\\{name}.{serial}.{Id}.{sampleNum}.jpg", gray[y1:y2, x1:x2])
                 cv2.imshow('Taking Images', img)
             if cv2.waitKey(100) & 0xFF == ord('q'):
                 break
             elif sampleNum > 100:
                 break
-
         cam.release()
         cv2.destroyAllWindows()
-
-        res = "Images Taken for ID : " + Id
+        res = "Images Taken for ID: " + Id
         row = [serial, '', Id, '', name]
         with open(csv_path, 'a+', newline='') as csvFile:
             writer = csv.writer(csvFile)
@@ -202,20 +249,17 @@ def TakeImages():
 
 ########################################################################################
 def TrainImages():
-    """Train the saved images to create or update the face recognition model."""
-    check_haarcascadefile()
+    """Train the saved images using LBPH to create/update the face recognition model."""
+    check_yolo_files()
     assure_path_exists("TrainingImageLabel/")
-
     recognizer = cv2.face.LBPHFaceRecognizer_create()
     detector = cv2.CascadeClassifier("haarcascade_frontalface_default.xml")
-
     faces, ID = getImagesAndLabels("TrainingImage")
     try:
         recognizer.train(faces, np.array(ID))
     except:
         mess._show(title='No Registrations', message='Please register someone first!')
         return
-
     recognizer.save("TrainingImageLabel\\Trainner.yml")
     res = "Profile Saved Successfully"
     message1.configure(text=res)
@@ -240,26 +284,21 @@ def getImagesAndLabels(path):
 
 ###########################################################################################
 def TrackImages():
-    """Detect and record attendance using the trained face recognizer."""
-    check_haarcascadefile()
+    """Detect and record attendance using the trained face recognizer and YOLO-based detection."""
+    check_yolo_files()
     assure_path_exists("Attendance/")
     assure_path_exists("StudentDetails/")
-
     for k in tv.get_children():
         tv.delete(k)
-
     recognizer = cv2.face.LBPHFaceRecognizer_create()
     trainner_path = "TrainingImageLabel\\Trainner.yml"
     if not os.path.isfile(trainner_path):
         mess._show(title='Data Missing', message='Please click on Save Profile to reset data!')
         return
     recognizer.read(trainner_path)
-
-    faceCascade = cv2.CascadeClassifier("haarcascade_frontalface_default.xml")
     cam = cv2.VideoCapture(0)
     font = cv2.FONT_HERSHEY_SIMPLEX
     col_names = ['Id', 'Name', 'Date', 'Time']
-
     csv_path = "StudentDetails\\StudentDetails.csv"
     if os.path.isfile(csv_path):
         df = pd.read_csv(csv_path)
@@ -268,17 +307,16 @@ def TrackImages():
         cam.release()
         cv2.destroyAllWindows()
         window.destroy()
-
     attendance_record = None
     while True:
         ret, im = cam.read()
         if not ret:
             break
         gray = cv2.cvtColor(im, cv2.COLOR_BGR2GRAY)
-        faces = faceCascade.detectMultiScale(gray, 1.2, 5)
-        for (x, y, w, h) in faces:
-            cv2.rectangle(im, (x, y), (x + w, y + h), (30, 144, 255), 2)
-            serial, conf = recognizer.predict(gray[y:y + h, x:x + w])
+        boxes = detect_faces_yolo(im, net_yolo, conf_threshold=0.5, nms_threshold=0.3)
+        for (x1, y1, x2, y2) in boxes:
+            cv2.rectangle(im, (x1, y1), (x2, y2), (30,144,255), 2)
+            serial, conf = recognizer.predict(gray[y1:y2, x1:x2])
             if conf < 50:
                 ts = time.time()
                 date_str = datetime.datetime.fromtimestamp(ts).strftime('%d-%m-%Y')
@@ -288,19 +326,16 @@ def TrackImages():
                 ID_str = str(ID_val)[1:-1]
                 name_str = str(aa)[2:-2]
                 attendance_record = [ID_str, name_str, date_str, timeStamp]
-                cv2.putText(im, name_str, (x, y + h), font, 1, (255, 255, 255), 2)
+                cv2.putText(im, name_str, (x1, y2), font, 1, (255,255,255), 2)
             else:
-                cv2.putText(im, 'Unknown', (x, y + h), font, 1, (255, 255, 255), 2)
+                cv2.putText(im, 'Unknown', (x1, y2), font, 1, (255,255,255), 2)
         cv2.imshow('Taking Attendance', im)
         if cv2.waitKey(1) == ord('q'):
             break
-
     cam.release()
     cv2.destroyAllWindows()
-
     if attendance_record:
-        date_str = attendance_record[2]
-        attend_excel = f"Attendance\\Attendance_{date_str}.xlsx"
+        attend_excel = f"Attendance\\Attendance_{attendance_record[2]}.xlsx"
         if os.path.isfile(attend_excel):
             df_existing = pd.read_excel(attend_excel)
             df_new = pd.DataFrame([attendance_record], columns=col_names)
@@ -309,17 +344,13 @@ def TrackImages():
         else:
             df_new = pd.DataFrame([attendance_record], columns=col_names)
             df_new.to_excel(attend_excel, index=False)
-
-        i = 0
         with open(attend_excel, 'r') as csvFile1:
             reader1 = csv.reader(csvFile1)
-            for lines in reader1:
-                i += 1
-                if (i > 1) and (i % 2 != 0):
+            for i, lines in enumerate(reader1):
+                if i > 0:
                     tv.insert('', 0, text=lines[0], values=(lines[1], lines[2], lines[3]))
 
 ######################################## USED STUFFS ############################################
-
 global key
 key = ''
 
@@ -333,14 +364,13 @@ mont = {
 }
 
 ######################################## GUI FRONT-END ###########################################
-
 window = tk.Tk()
 window.title("Attendance System - Dark Mode")
 window.geometry("1280x720")
 window.resizable(True, False)
-window.configure(bg="#1e272e")  # Dark background
+window.configure(bg="#1e272e")
 
-# Main title label across top (modern flat header)
+# Main title label (modern flat header)
 title_label = tk.Label(window,
                        text="Face Recognition Based Attendance System",
                        bg="#23272a",
